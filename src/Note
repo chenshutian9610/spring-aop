@@ -1,0 +1,63 @@
+* AOP 可分为运行时织入和加载时织入
+  前者底层使用 JDK 代理或 CGLIB，最常用
+  后者被称为 LTW（load to waving），通过给 ClassLoader 注册 ClassFileTransformer，即在加载时更改类文件，需要依赖 AspectJ 实现
+* 注意，假设 x 和 y 两个方法都被 AOP 增强，但是如果在 x 方法里面使用 y，这里的 y 不会被增强
+
+* AOP 术语
+    joinPoint       连接点
+    pointcut        切点，pointcut 是一个单词，不是 point + cut
+    advice          增强
+    introduction    引介，向目标类添加方法（让目标类实现接口，需要指定接口和接口实现类）
+    aspect          切面，包括增强和切点，在 Spring AOP 中 aspect 被称作 advisor
+    target          目标类
+    waving          织入
+    proxy           代理
+
+* Spring AOP (ProxyFactoryBean -> AutoProxyCreator -> AspectJ)
+  * AspectJ 的注解方式需要 Java5.0 的支持，如果底层环境不支持注解则可以使用 schema 方式配置
+  * AspectJ 切点使用切点函数表示（Spring AOP 只支持部分切点函数）
+    * 切点函数通配符
+      ..          在包中表示多层路径，在方法中表示多个入参
+      *           任意字符
+      +           扩展，即包括子类
+    * 常用切点函数
+      execution   参数格式为 '返回类型 方法全名（方法入参）'，如 execution(* tree..Waiter.question(..))
+      within      参数为类名，如 within(tree.target.Waiter)
+      target      参数为类名，如 target(tree.target.Waiter)，相当于 within(tree.target.Waiter+)
+      this        参数为类名，与 target 使用方法一样，不过可以绑定参数，如 this("waiter")public void before(Waiter waiter)
+      args        参数为入参，如 args(name,sex,..)
+
+----------------- AspectJ of Spring AOP -----------------
+* annotation
+  * 注解方式需要配置自动创建代理（AutoProxyCreator），如下：
+    <bean class="org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator"/>
+    可简写为 <aop:aspectj-autoproxy/>，最好再使用 proxy-target-class=true 使用 CGLIB
+  * 常用注解
+        @Aspect             声明一个切面
+        @Pointcut           命名切点，有利于复用
+        @Before             前置增强
+        @Around             环绕增强，必须使用 ProceedingJoinPoint#proceed
+        @AfterReturning     返回增强
+        @AfterThrowing      异常增强
+        @After              final 增强
+        @DeclareParents     引介增强，使用对象是一个接口型属性，需要配置接口实现类和目标类
+  * 数据绑定
+    * 除环绕增强使用 ProceedingJoinPoint 外，其他增强使用 JoinPoint 绑定连接点
+    * 可以使用 this 函数，args 函数，返回增强的 returning 属性或异常增强的 throwing 绑定入参
+
+* schema
+  <aop:config>          代替 <aop:aspect-autoproxy/>，在里面可以配置多个 aspect
+  <aop:aspect>          代替 @Aspect，需要使用一个 ref 引用一个 advice
+  <aop:pointcut>        代替 @PointCut，含有 id 和 expression 属性
+  <aop:before>          代替 @Before，含有 method 和 pointcut/pointcut-ref 属性，其他增强一样
+  <aop:declare-parents> 代替 @DeclareParents，需要配置目标类，接口类和接口实现类
+
+----------------- Spring AOP without AspectJ -----------------
+* 使用 ProxyFactoryBean 创建代理，后来为了简化配置增加了 AutoProxyCreator
+* Advice 需要实现 aopalliance 定义的接口（前置增强等）
+* Spring 定义了四种切点
+    静态切点    根据类名和方法名匹配切点
+    动态切点    在静态切面的基础，再根据入参匹配切点
+    流程切点    将指定方法看成类，把方法中的步骤看成方法，然后增强
+    复合切点
+* 一般不会使用 Spring 本身的 AOP 的

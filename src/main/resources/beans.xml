@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="
+            http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+            http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd">
+    <!-- annotation 配置 -->
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+    <context:component-scan base-package="tree.*"/>
+
+    <!-- schema 配置
+    <bean id="waiter" class="tree.target.Waiter"/>
+    <bean id="advice" class="tree.aspect.AspectJAdvice"/>
+    <aop:config proxy-target-class="true">
+        <aop:aspect ref="advice">
+            <aop:pointcut id="myPointcut" expression="execution(* tree..Waiter.*(..))"/>
+            <aop:before method="greet" pointcut="execution(* tree..Waiter.*(..)) and args(name,..)"/>
+            <aop:after method="answer" pointcut-ref="myPointcut"/>
+            <aop:declare-parents implement-interface="tree.introduction.Cook" default-impl="tree.introduction.CookImpl"
+                                 types-matching="tree.target.Waiter" />
+        </aop:aspect>
+    </aop:config> -->
+</beans>
